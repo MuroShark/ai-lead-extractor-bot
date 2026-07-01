@@ -1,0 +1,29 @@
+# Elixir / Mix
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+erl_crash.dump
+*.ez
+*.beam
+/config/*.secret.exs
+.elixir_ls/
+/priv/plts/
+*.plt
+
+# Rust
+/native/**/target/
+**/*.rs.bk
+
+# Compiled NIF artifact (rebuilt by `mix compile`, platform-specific)
+/priv/native/
+
+# Secrets & local env
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,15 @@
+[package]
+name = "leadbot_native"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "leadbot_native"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.38.0"
+sha2 = "0.11.0"
+hex = "0.4.3"
+unicode-normalization = "0.1.25"
