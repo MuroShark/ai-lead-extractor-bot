@@ -11,6 +11,8 @@ defmodule LeadBot.Extractor do
 
   @default_retries 1
   @default_backoff_ms 500
+  @max_backoff_ms 20_000
+  @transient_http [408, 425, 429, 500, 502, 503, 504]
 
   @system """
   Ты — ассистент отдела продаж. Тебе присылают СЫРОЕ сообщение от клиента
@@ -110,7 +112,7 @@ defmodule LeadBot.Extractor do
 
       {:error, reason} ->
         if transient?(reason) and attempt < ctx.max_retries do
-          Process.sleep(ctx.backoff_ms * (attempt + 1))
+          Process.sleep(retry_delay(reason, ctx, attempt))
           call_with_retries(model, ctx, attempt + 1)
         else
           {:error, reason}
@@ -118,17 +120,31 @@ defmodule LeadBot.Extractor do
     end
   end
 
-  defp transient?({:http, status}) when status in [408, 425, 429, 500, 502, 503, 504], do: true
+  defp transient?({:http, status, _retry_ms}) when status in @transient_http, do: true
+  defp transient?({:http, status}) when status in @transient_http, do: true
   defp transient?(:transport), do: true
   defp transient?(:timeout), do: true
   defp transient?(_), do: false
 
+  # Honour the provider's Retry-After (capped) for rate limits; otherwise linear backoff.
+  defp retry_delay({:http, status, retry_ms}, _ctx, _attempt)
+       when status in [429, 503] and is_integer(retry_ms),
+       do: min(retry_ms, @max_backoff_ms)
+
+  defp retry_delay(_reason, ctx, attempt), do: ctx.backoff_ms * (attempt + 1)
+
   defp models do
-    [
-      Application.get_env(:lead_bot, :openrouter_model),
-      Application.get_env(:lead_bot, :openrouter_fallback_model)
-    ]
+    [Application.get_env(:lead_bot, :openrouter_model) | fallback_models()]
     |> Enum.reject(&(is_nil(&1) or &1 == ""))
+    |> Enum.uniq()
+  end
+
+  # Fallback model(s) — a single id or a comma-separated chain for extra resilience.
+  defp fallback_models do
+    case Application.get_env(:lead_bot, :openrouter_fallback_model) do
+      value when is_binary(value) -> value |> String.split(",") |> Enum.map(&String.trim/1)
+      _ -> []
+    end
   end
 
   defp default_client, do: Application.get_env(:lead_bot, :openrouter_client, LeadBot.OpenRouter)

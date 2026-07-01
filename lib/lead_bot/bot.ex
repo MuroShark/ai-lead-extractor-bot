@@ -93,6 +93,9 @@ defmodule LeadBot.Bot do
   defp error_message(:no_api_key),
     do: "⚙️ Не задан OPENROUTER_API_KEY — не могу обратиться к модели."
 
+  defp error_message({:http, status, _retry_ms}) when status in [408, 429, 500, 502, 503, 504],
+    do: "⏳ Модель сейчас перегружена или недоступна. Попробуй ещё раз через минуту."
+
   defp error_message({:http, status}) when status in [408, 429, 500, 502, 503, 504],
     do: "⏳ Модель сейчас перегружена или недоступна. Попробуй ещё раз через минуту."
 

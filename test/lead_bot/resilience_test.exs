@@ -23,6 +23,16 @@ defmodule LeadBot.ResilienceTest do
     end
   end
 
+  defmodule RateLimitedThenBackupClient do
+    # Mimics OpenRouter returning {:http, code, retry_after_ms}.
+    def chat(_messages, opts) do
+      case Keyword.fetch!(opts, :model) do
+        "limited" -> {:error, {:http, 429, 20}}
+        "backup" -> {:ok, ~s({"is_lead": true, "leads": [{"request": "автоматизация"}]})}
+      end
+    end
+  end
+
   defmodule DownClient do
     def chat(_messages, _opts), do: {:error, :transport}
   end
@@ -52,6 +62,16 @@ defmodule LeadBot.ResilienceTest do
                  client: TransientThenBackupClient,
                  models: ["flaky", "backup"],
                  max_retries: 2,
+                 backoff_ms: 0
+               )
+    end
+
+    test "honours a rate-limit (Retry-After) error and falls back to the backup model" do
+      assert {:ok, %{"is_lead" => true}} =
+               Extractor.extract("...",
+                 client: RateLimitedThenBackupClient,
+                 models: ["limited", "backup"],
+                 max_retries: 1,
                  backoff_ms: 0
                )
     end
