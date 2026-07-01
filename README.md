@@ -12,6 +12,18 @@ Rust-NIF (нормализация текста и дедуп-отпечаток
 - Elixir `~> 1.19` / Erlang OTP 29
 - Rust `~> 1.92` (`cargo` в PATH — нужен для сборки NIF)
 
+### Установка стека (если ещё не стоит)
+
+**macOS (Homebrew):**
+
+```sh
+brew install elixir                       # тянет Erlang/OTP как зависимость
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh   # Rust (rustup)
+```
+
+**Linux:** Elixir/Erlang — через пакетный менеджер или [asdf](https://asdf-vm.com);
+Rust — через [rustup](https://rustup.rs). Проверить: `elixir --version` и `cargo --version`.
+
 ## Настройка
 
 ```sh
