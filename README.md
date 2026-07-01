@@ -46,14 +46,20 @@ cargo clippy --manifest-path native/leadbot_native/Cargo.toml
 
 ```
 lib/lead_bot/
-  application.ex   # OTP-супервизор: ExGram + бот (если задан токен)
-  bot.ex           # ExGram-хендлеры (long polling)
+  application.ex   # OTP-супервизор: Dedup + ExGram + бот (если задан токен)
+  bot.ex           # ExGram-хендлеры (polling), "печатает", дедлайн, дедуп
+  extractor.ex     # промпт, вызов LLM, ретраи + фолбэк-модель, парсинг JSON
+  open_router.ex   # HTTP-клиент OpenRouter (Req)
+  card.ex          # рендер карточек лида в HTML (эскейпинг, N карточек)
+  phone.ex         # нормализация телефонов к +7
+  dedup.ex         # дедуп по {chat_id, fingerprint} (ETS + TTL 10 мин)
   native.ex        # Rustler-байндинги (normalize/fingerprint)
 native/leadbot_native/
   src/lib.rs       # Rust: NFKC-нормализация + SHA-256 отпечаток
 config/
   config.exs       # compile-time (ExGram Req-адаптер и т.п.)
   runtime.exs      # runtime: .env -> app env (dotenvy)
+test/              # ExUnit: извлечение, устойчивость (моки API), Rust-NIF
 ```
 
 ## Архитектурные особенности и логика работы
