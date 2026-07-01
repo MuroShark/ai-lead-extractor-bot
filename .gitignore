@@ -27,3 +27,6 @@ erl_crash.dump
 # OS
 .DS_Store
 Thumbs.db
+
+# Submission note — for the reviewer only, delivered with the archive, not public
+/NOTES.md
